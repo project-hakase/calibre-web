@@ -135,17 +135,6 @@ def edit_book(book_id):
         title_change = handle_title_on_edit(book, to_save["book_title"])
         # handle book author change
         input_authors, author_change, renamed = handle_author_on_edit(book, to_save["author_name"])
-        if author_change or title_change:
-            edited_books_id = book.id
-            modify_date = True
-            title_author_error = helper.update_dir_structure(edited_books_id,
-                                                             config.get_book_path(),
-                                                             input_authors[0],
-                                                             renamed_author=renamed)
-        if title_author_error:
-            flash(title_author_error, category="error")
-            calibre_db.session.rollback()
-            book = calibre_db.get_filtered_book(book_id, allow_show_archived=True)
 
         # handle upload other formats from local disk
         meta = upload_single_file(request, book, book_id)
@@ -228,6 +217,37 @@ def edit_book(book_id):
                 and title_author_error is not True \
                 and cover_upload_success is not False:
             flash(_("Metadata successfully updated"), category="success")
+
+        # 2024/06/13 Update: Move this file structure change after 
+        # the database operation success
+        # The previous way will cause the following error.
+        # Suppose:
+        #   1. file structure change (due to title/author change)
+        #     1.5 inside, will change the bookkeeping of book.path in calibre db
+        #   2. meta data SQL update
+        #   !! 3. SQL error
+        #   4. rollback in error handling
+        # In this scenario the file system changes are not rolled back.
+        # the current approach tries to fix it
+        try:
+            if author_change or title_change:
+                edited_books_id = book.id
+                modify_date = True
+                title_author_error = helper.update_dir_structure(edited_books_id,
+                                                                config.get_book_path(),
+                                                                input_authors[0],
+                                                                renamed_author=renamed)
+            if title_author_error:
+                flash(title_author_error, category="error")
+                calibre_db.session.rollback()
+                book = calibre_db.get_filtered_book(book_id, allow_show_archived=True)
+        except Exception as e:
+            log.error_or_exception(e)
+            flash(_("Error: {}".format(e)), category="error")
+            calibre_db.session.rollback()
+            book = calibre_db.get_filtered_book(book_id, allow_show_archived=True)
+            return redirect(url_for('web.show_book', book_id=book.id))
+
         if "detail_view" in to_save:
             return redirect(url_for('web.show_book', book_id=book.id))
         else:
