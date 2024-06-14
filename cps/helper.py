@@ -663,6 +663,15 @@ def uniq(inpt):
     return output
 
 
+def uniq_case_insensitive(inpt):
+    output = []
+    inpt = [" ".join(inp.split()) for inp in inpt]
+    for x in inpt[::-1]:
+        if x.lower() not in [y.lower() for y in output]:
+            output.append(x)
+    return output
+
+
 def check_email(email):
     email = valid_email(email)
     if ub.session.query(ub.User).filter(func.lower(ub.User.email) == email.lower()).first():

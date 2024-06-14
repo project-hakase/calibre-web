@@ -644,7 +644,7 @@ def prepare_authors(authr):
     # handle_authors(input_authors)
     input_authors = list(map(lambda it: it.strip().replace(',', '|'), input_authors))
     # Remove duplicates in authors list
-    input_authors = helper.uniq(input_authors)
+    input_authors = helper.uniq_case_insensitive(input_authors)
 
     # we have all author names now
     if input_authors == ['']:
@@ -998,7 +998,7 @@ def edit_book_tags(tags, book):
     input_tags = tags.split(',')
     input_tags = list(map(lambda it: it.strip(), input_tags))
     # Remove duplicates
-    input_tags = helper.uniq(input_tags)
+    input_tags = helper.uniq_case_insensitive(input_tags)
     return modify_database_object(input_tags, book.tags, db.Tags, calibre_db.session, 'tags')
 
 
@@ -1069,7 +1069,7 @@ def edit_book_languages(languages, book, upload_mode=False, invalid=None):
             input_l[0] = calibre_db.session.query(db.Languages). \
                 filter(db.Languages.lang_code == current_user.filter_language()).first().lang_code
     # Remove duplicates
-    input_l = helper.uniq(input_l)
+    input_l = helper.uniq_case_insensitive(input_l)
     return modify_database_object(input_l, book.languages, db.Languages, calibre_db.session, 'languages')
 
 
