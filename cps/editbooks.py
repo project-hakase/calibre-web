@@ -1391,8 +1391,8 @@ def add_objects(db_book_object, db_object, db_session, db_type, add_elements):
         # check if an element with that name exists
         changed = True
         # db_session.query(db.Tags).filter((func.lower(db.Tags.name).ilike("GênOt"))).all()
-        db_element = db_session.query(db_object).filter((func.lower(db_filter).ilike(add_element))).first()
-        # db_element = db_session.query(db_object).filter(func.lower(db_filter) == add_element.lower()).first()
+        # db_element = db_session.query(db_object).filter((func.lower(db_filter).ilike(add_element))).first()
+        db_element = db_session.query(db_object).filter(func.lower(db_filter) == add_element.lower()).first()
         # if no element is found add it
         if db_element is None:
             if db_type == 'author':
@@ -1408,13 +1408,7 @@ def add_objects(db_book_object, db_object, db_session, db_type, add_elements):
             db_session.add(new_element)
             db_book_object.append(new_element)
         else:
-            db_no_case = db_session.query(db_object).filter(db_filter == add_element).first()
-            if db_no_case:
-                # check for new case of element
-                db_element = create_objects_for_addition(db_element, add_element, db_type)
-            else:
-                db_element = create_objects_for_addition(db_element, add_element, db_type)
-            # add element to book
+            db_element = create_objects_for_addition(db_element, add_element, db_type)
             db_book_object.append(db_element)
 
     return changed
@@ -1453,15 +1447,6 @@ def modify_database_object(input_elements, db_book_object, db_object, db_session
     input_elements = [x for x in input_elements if x != '']
 
     changed = False
-    # If elements are renamed (upper lower case), rename it
-    for rec_a, rec_b in zip(db_book_object, input_elements):
-        if db_type == "custom":
-            if rec_a.value.casefold() == rec_b.casefold() and rec_a.value != rec_b:
-                create_objects_for_addition(rec_a, rec_b, db_type)
-        else:
-            if rec_a.get().casefold() == rec_b.casefold() and rec_a.get() != rec_b:
-                create_objects_for_addition(rec_a, rec_b, db_type)
-        # we have all input element (authors, series, tags) names now
     # 1. search for elements to remove
     del_elements = search_objects_remove(db_book_object, db_type, input_elements)
     # 2. search for elements that need to be added
