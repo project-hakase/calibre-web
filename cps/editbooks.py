@@ -1387,12 +1387,20 @@ def add_objects(db_book_object, db_object, db_session, db_type, add_elements):
         db_filter = db_object.value
     else:
         db_filter = db_object.name
+
+    # register raw_lower function to sqlite
+    # the lower is overridden in db.py, to unidecode.unidecode(s.lower())
+    # which will turn everything into roman characters.
+    # this should not be the case!
+    # here we fallback to the original lower function
+    calibre_db.session.connection().connection.connection.create_function("raw_lower", 1, str.lower)
+
     for add_element in add_elements:
         # check if an element with that name exists
         changed = True
         # db_session.query(db.Tags).filter((func.lower(db.Tags.name).ilike("GênOt"))).all()
         # db_element = db_session.query(db_object).filter((func.lower(db_filter).ilike(add_element))).first()
-        db_element = db_session.query(db_object).filter(func.lower(db_filter) == add_element.lower()).first()
+        db_element = db_session.query(db_object).filter(func.raw_lower(db_filter) == add_element.lower()).first()
         # if no element is found add it
         if db_element is None:
             if db_type == 'author':
