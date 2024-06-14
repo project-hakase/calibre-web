@@ -237,6 +237,8 @@ def edit_book(book_id):
                                                                 config.get_book_path(),
                                                                 input_authors[0],
                                                                 renamed_author=renamed)
+                calibre_db.session.merge(book)
+                calibre_db.session.commit()
             if title_author_error:
                 flash(title_author_error, category="error")
                 calibre_db.session.rollback()
