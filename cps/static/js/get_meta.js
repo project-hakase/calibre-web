@@ -38,26 +38,42 @@ $(function () {
     }
 
     function populateForm (book) {
-        tinymce.get("description").setContent(book.description);
-        var uniqueTags = getUniqueValues('tags', book)
-        var uniqueLanguages = getUniqueValues('languages', book)
-        var ampSeparatedAuthors = (book.authors || []).join(" & ");
-        $("#bookAuthor").val(ampSeparatedAuthors);
-        $("#book_title").val(book.title);
-        $("#tags").val(uniqueTags.join(", "));
-        $("#languages").val(uniqueLanguages.join(", "));
-        $("#rating").data("rating").setValue(Math.round(book.rating));
-        if(book.cover && $("#cover_url").length){
+        if ($("#include_description").is(':checked')) {
+            tinymce.get("description").setContent(book.description);
+        }
+        if ($("#include_authors").is(':checked')) {
+            var ampSeparatedAuthors = (book.authors || []).join(" & ");
+            $("#bookAuthor").val(ampSeparatedAuthors);
+        }
+        if ($("#include_title").is(':checked')) {
+            $("#book_title").val(book.title);
+        }
+        if ($("#include_tags").is(':checked')) {
+            var uniqueTags = getUniqueValues('tags', book);
+            $("#tags").val(uniqueTags.join(", "));
+        }
+        if ($("#include_languages").is(':checked')) {
+            var uniqueLanguages = getUniqueValues('languages', book);
+            $("#languages").val(uniqueLanguages.join(", "));
+        }
+        if ($("#include_rating").is(':checked')) {
+            $("#rating").data("rating").setValue(Math.round(book.rating));
+        }
+        if ($("#include_cover").is(':checked') && book.cover && $("#cover_url").length) {
             $(".cover img").attr("src", book.cover);
             $("#cover_url").val(book.cover);
         }
-        $("#pubdate").val(book.publishedDate);
-        $("#publisher").val(book.publisher);
-        if (typeof book.series !== "undefined") {
+        if ($("#include_pubdate").is(':checked')) {
+            $("#pubdate").val(book.publishedDate);
+        }
+        if ($("#include_publisher").is(':checked')) {
+            $("#publisher").val(book.publisher);
+        }
+        if ($("#include_series").is(':checked') && typeof book.series !== "undefined") {
             $("#series").val(book.series);
             $("#series_index").val(book.series_index);
         }
-        if (typeof book.identifiers !== "undefined") {
+        if ($("#include_identifiers").is(':checked') && typeof book.identifiers !== "undefined") {
             populateIdentifiers(book.identifiers)
         }
     }
@@ -180,6 +196,32 @@ $(function () {
     $("#metaModal").on("show.bs.modal", function(e) {
         $(e.relatedTarget).one('focus', function (e) {
             $(this).blur();
+        });
+    });
+
+    /// metadata inclusion checkbox settings
+
+    // Function to save the checkbox state to localStorage
+    function saveCheckboxState(id, isChecked) {
+        localStorage.setItem(id, isChecked);
+    }
+
+    // Function to load the checkbox state from localStorage
+    function loadCheckboxState(id) {
+        return localStorage.getItem(id) === 'true';
+    }
+
+    // Iterate over each checkbox within the div#meta_included
+    $('#meta_included input[type="checkbox"]').each(function () {
+        var checkbox = $(this);
+        var id = checkbox.attr('id');
+
+        // Load the saved state and apply it to the checkbox
+        checkbox.prop('checked', loadCheckboxState(id));
+
+        // Add change event listener to save the state when changed
+        checkbox.on('change', function () {
+            saveCheckboxState(id, checkbox.is(':checked'));
         });
     });
 });
