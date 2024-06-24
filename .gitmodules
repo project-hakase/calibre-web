@@ -1,0 +1,3 @@
+[submodule "dependencies/calibre-web-bgm"]
+	path = dependencies/calibre-web-bgm
+	url = https://github.com/JeffersonQin/calibre-web-bgm
